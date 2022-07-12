@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 
+
 import Segmentation_header as h
 
 
@@ -18,6 +19,7 @@ import Segmentation_header as h
 # Set up the file paths.
 source_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/LLR_DATA_PROCESSING_PIPELINE/3_LLR_DATA_CLEANING/" \
                 "NUMPY_FILES"
+test_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/TEST_FOLDER"
 npy_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/LLR_DATA_PROCESSING_PIPELINE/4_LLR_DATA_SEGMENTATION/" \
              "NUMPY_FILES"
 npz_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/LLR_DATA_PROCESSING_PIPELINE/4_LLR_DATA_SEGMENTATION/" \
@@ -26,13 +28,14 @@ graph_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/LLR_DATA_PROCES
              "GRAPHS"
 # The graph folder will be useful for plotting the newly segmented data, identifying where errors may be occurring,
 # and developing a plan of action for accounting for it.
+plot_lowest_force_lines = True
 
 if __name__ == '__main__':
     # Loop through numpy files that have been cleaned.
-    for file in os.listdir(source_folder):
+    for file in os.listdir(test_folder):
         if file.endswith('.npy'):
             # Load the data.
-            source_file = source_folder + '/' + file
+            source_file = test_folder + '/' + file
             print(file)
             data = np.load(source_file)
             # Identify locations of change between target locations by using To_From_Home column. Add 1 to get correct
@@ -47,25 +50,17 @@ if __name__ == '__main__':
             # Apply filters to force and velocity data, but force is probably more likely to represent intention than velocity.
             freq1 = 3
             f1 = h.butterworth_filter(f, freq1)
-            # Identify, based on Algorithm 1 in notes.
-            first_min = []
-            my_min = (np.asarray(signal.argrelmin(f1)).flatten()).reshape((-1, 1))
-            min_time = t[my_min]
-            # Based on Algorithm 1, find the first instance of min_ind that is greater than each subsequent t_target.
-            for i in t_targets:
-                j2 = [j for j in min_time if j > i]
-                first_min.append(np.round(j2[0][0], 2))
-            # Plot what this looks like.
-            fig, ax = plt.subplots()
-            fig.set_size_inches(25, 8)
-            [ax.axvline(_t_targets, color='k') for _t_targets in t_targets]
-            # ax.plot(t, f, 'g-', label="Force Magnitude, no filter")
-            ax.plot(t, f1, 'b-', label="Force Magnitude, 3 Hz filter")
-            [ax.axvline(_my_min, color='g') for _my_min in first_min]
-            # ax.plot(t, d/500, 'b-', label="Distance from Target")
-            plt.legend()
-            plt.show()
-            plt.close()
+            # find first location of minimum force applied after the start of each task.
+            # TODO: Observe how find_peaks function that implements peak prominence is able to identify the peaks in
+            #  the signal.
+            peaks, properties = signal.find_peaks(f, prominence=2)
+            peaks = t[peaks]
+            first_min, my_min, min_time = h.find_first_min(t, f1, t_targets, peaks)
+            save_name = file[:-12] + '_force_lowest_min_after_task_start'
+            save_folder = graph_folder + '/' + save_name
+            if plot_lowest_force_lines:
+                h.plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f1, d, peaks, first_min, save_name,
+                                                                      save_folder)
 
 
 

@@ -4,8 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="Added get_first_target_row (returns first index where the target to be acquired changes); added butterworth_filter function (takes in data and desired filtering frequency and applies forward and backwards second order filter to the data, assuming that sampling frequency is 100 Hz); added new imports. In main code, takes in file from source_folder and loads it into numpy array, identifies the first index of obtaining a new target. Obtains force data, applies 3 Hz filter to force signal (to smooth curve and remove higher frequency data such as tremor that might make it more difficult to determine the desired minimum in force), and applies Algorithm 1 with no variations, which simply takes the first minima of force after each new target occurs. Plots the force signal, the new target time as a vertical line, as well as the location of the time of the minimum force occurring after each new target is obtained.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Segmentation_header.py" beforeDir="false" afterPath="$PROJECT_DIR$/Segmentation_header.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -69,6 +68,14 @@
       <option name="presentableId" value="Default" />
       <updated>1657157793237</updated>
     </task>
+    <task id="LOCAL-00001" summary="Added get_first_target_row (returns first index where the target to be acquired changes); added butterworth_filter function (takes in data and desired filtering frequency and applies forward and backwards second order filter to the data, assuming that sampling frequency is 100 Hz); added new imports. In main code, takes in file from source_folder and loads it into numpy array, identifies the first index of obtaining a new target. Obtains force data, applies 3 Hz filter to force signal (to smooth curve and remove higher frequency data such as tremor that might make it more difficult to determine the desired minimum in force), and applies Algorithm 1 with no variations, which simply takes the first minima of force after each new target occurs. Plots the force signal, the new target time as a vertical line, as well as the location of the time of the minimum force occurring after each new target is obtained.">
+      <created>1657484957309</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1657484957309</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -82,5 +89,20 @@
       </map>
     </option>
     <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added get_first_target_row (returns first index where the target to be acquired changes); added butterworth_filter function (takes in data and desired filtering frequency and applies forward and backwards second order filter to the data, assuming that sampling frequency is 100 Hz); added new imports. In main code, takes in file from source_folder and loads it into numpy array, identifies the first index of obtaining a new target. Obtains force data, applies 3 Hz filter to force signal (to smooth curve and remove higher frequency data such as tremor that might make it more difficult to determine the desired minimum in force), and applies Algorithm 1 with no variations, which simply takes the first minima of force after each new target occurs. Plots the force signal, the new target time as a vertical line, as well as the location of the time of the minimum force occurring after each new target is obtained." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added get_first_target_row (returns first index where the target to be acquired changes); added butterworth_filter function (takes in data and desired filtering frequency and applies forward and backwards second order filter to the data, assuming that sampling frequency is 100 Hz); added new imports. In main code, takes in file from source_folder and loads it into numpy array, identifies the first index of obtaining a new target. Obtains force data, applies 3 Hz filter to force signal (to smooth curve and remove higher frequency data such as tremor that might make it more difficult to determine the desired minimum in force), and applies Algorithm 1 with no variations, which simply takes the first minima of force after each new target occurs. Plots the force signal, the new target time as a vertical line, as well as the location of the time of the minimum force occurring after each new target is obtained." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Segmentation_header.py</url>
+          <line>41</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
