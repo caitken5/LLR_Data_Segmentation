@@ -61,6 +61,17 @@ if __name__ == '__main__':
             if plot_lowest_force_lines:
                 h.plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f1, d, peaks, first_min, save_name,
                                                                       save_folder)
+            # Split_by_indices for standard function saving.
 
+            # Split_by_indices for new start of force exertion.
 
+            # Identify if a new reach occurs.
+            new_reach_index, d_minima, d_maxima = h.find_end_of_initial_reach(data)
+            if new_reach_index.shape[0] > 0:
+                # Combine the first_min index with this and re-sort.
+                multi_split_index = []  # Identify if I can rewrite this as a list literal, and how.
+                multi_split_index.append(first_min)
+                multi_split_index.append(new_reach_index)
+                multi_split_index.sort()  # TODO: Confirm that this sorts from least to most.
 
+            # Split_by_indices for separation of reaches for each task ie. does it take multiple times to complete the reach?

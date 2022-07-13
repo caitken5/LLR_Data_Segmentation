@@ -39,13 +39,16 @@ def find_first_min(t, f, t_targets, peaks):
     for i in t_targets:
         j2 = [j for j in min_time if j > i]
         if len(j2) == 0:
-            break
+            j2 = i
         j3 = [j for j in peaks if j > i]
         if j2 > j3:
             j2 = i  # If the minimum value occurs after a clear peak in movement, let the first value of the new task
             # start time be the original start task time.
             # TODO: See if this if statement works as desired.
+            # TODO: Might also just exclude the data where this occurs.
         first_min.append(np.round(j2[0][0], 2))
+        # NOTE: THERE WILL BE AN ERROR BETWEEN j2 = i and j2 = a value in min_time.
+        # TODO: Ensure first_min provides the correct time and is not off by 0.01.
     return first_min, my_min, min_time
 
 
@@ -70,3 +73,46 @@ def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, d, peak
     fig.clf()
     plt.close()
     gc.collect()
+
+
+# TODO: Test split_by_indices.
+def split_by_indices(data, indices):
+    # Split the arrays according to the indices that correspond to when a new target is being responded to.
+    start = 0
+    ragged_list = []
+    # Note that first_min is already the array of all the indices for packing and unpacking the arrays.
+    for i in indices:
+        ragged_list.append(data[start:i, :])
+        start = i
+    # We will not append the last section of the array because it likely contains erroneous data.
+    ragged_list.append(data[start:, :])
+    return ragged_list
+
+
+# TODO: Test find_min_and_max_peak.
+def find_min_and_max_peak(data, minima_prominence, maxima_prominence):
+    # Find the minimum values and peaks in selected data.
+    # To find the minimum values using find_peaks function, first multiply series by -1.
+    neg_data = data*(-1)
+    minima = signal.find_peaks(neg_data, prominence=minima_prominence)
+    maxima = signal.find_peaks(data, prominence=maxima_prominence)
+    return minima, maxima
+
+
+# TODO: Test find_end_of_initial_reach.
+def find_end_of_initial_reach(data):
+    # First identify the displacement column of the data.
+    d = data[:, data_header.index('Dist_From_Target')]
+    min_prominence = 5  # Likely in mm.
+    max_prominence = 5
+    new_reach_index = []
+    # Then pass this data to the find_min_peak function. Hopefully some smoothing is not needed.
+    minima, maxima = find_min_and_max_peak(d, min_prominence, max_prominence)
+    # For every minima in the data that occurs, then select the first maxima that occurs after that minima value.
+    for i in minima:
+        j2 = [j for j in maxima if j > i]
+        if j2.shape[0] > 0:
+            # Then another return to the target will have occurred, and the reach can be considered to have occurred.
+            new_reach_index.append(j2[0][0])
+    return new_reach_index, minima, maxima
+# Note that it is possible for new_reach_index to be empty.
