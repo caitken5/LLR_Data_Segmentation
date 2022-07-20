@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="Added plotting into function in Segmentation_header. Plotted all the graphs. Fixed an error where code wouldn't work if not the lowest dip in signal would occur at the very end of the task. Added code to look for prominent peaks so that if the lowest peak value occurs before the lowest point, we start the force profile from the point where the task number changes. This still needs error checking, but this is the idea.">
+    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="A lot of code here has been written in this section, but has not been tested. NEXT STEP IS TO TEST AND VERIFY ALL THE SECTIONS OF THE CODE. THEN SEPARATION OF THE TASKS WILL HAVE BEEN ADDRESSED AND CAN MOVE ONTO ANALYSIS CODE. Added comments for where I want to split the code. Added section for appending index values to see if the target is missed on the initial reach. Doing this will be good for analysis later. In Segmentation_header,, added TODOs and functions that need to be tested.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Segmentation_header.py" beforeDir="false" afterPath="$PROJECT_DIR$/Segmentation_header.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -34,7 +34,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../LLR_Data_Cleaning" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
@@ -82,7 +82,14 @@
       <option name="project" value="LOCAL" />
       <updated>1657626231613</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="A lot of code here has been written in this section, but has not been tested. NEXT STEP IS TO TEST AND VERIFY ALL THE SECTIONS OF THE CODE. THEN SEPARATION OF THE TASKS WILL HAVE BEEN ADDRESSED AND CAN MOVE ONTO ANALYSIS CODE. Added comments for where I want to split the code. Added section for appending index values to see if the target is missed on the initial reach. Doing this will be good for analysis later. In Segmentation_header,, added TODOs and functions that need to be tested.">
+      <created>1657710231600</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1657710231600</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -100,6 +107,30 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added get_first_target_row (returns first index where the target to be acquired changes); added butterworth_filter function (takes in data and desired filtering frequency and applies forward and backwards second order filter to the data, assuming that sampling frequency is 100 Hz); added new imports. In main code, takes in file from source_folder and loads it into numpy array, identifies the first index of obtaining a new target. Obtains force data, applies 3 Hz filter to force signal (to smooth curve and remove higher frequency data such as tremor that might make it more difficult to determine the desired minimum in force), and applies Algorithm 1 with no variations, which simply takes the first minima of force after each new target occurs. Plots the force signal, the new target time as a vertical line, as well as the location of the time of the minimum force occurring after each new target is obtained." />
     <MESSAGE value="Added plotting into function in Segmentation_header. Plotted all the graphs. Fixed an error where code wouldn't work if not the lowest dip in signal would occur at the very end of the task. Added code to look for prominent peaks so that if the lowest peak value occurs before the lowest point, we start the force profile from the point where the task number changes. This still needs error checking, but this is the idea." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added plotting into function in Segmentation_header. Plotted all the graphs. Fixed an error where code wouldn't work if not the lowest dip in signal would occur at the very end of the task. Added code to look for prominent peaks so that if the lowest peak value occurs before the lowest point, we start the force profile from the point where the task number changes. This still needs error checking, but this is the idea." />
+    <MESSAGE value="A lot of code here has been written in this section, but has not been tested. NEXT STEP IS TO TEST AND VERIFY ALL THE SECTIONS OF THE CODE. THEN SEPARATION OF THE TASKS WILL HAVE BEEN ADDRESSED AND CAN MOVE ONTO ANALYSIS CODE. Added comments for where I want to split the code. Added section for appending index values to see if the target is missed on the initial reach. Doing this will be good for analysis later. In Segmentation_header,, added TODOs and functions that need to be tested." />
+    <option name="LAST_COMMIT_MESSAGE" value="A lot of code here has been written in this section, but has not been tested. NEXT STEP IS TO TEST AND VERIFY ALL THE SECTIONS OF THE CODE. THEN SEPARATION OF THE TASKS WILL HAVE BEEN ADDRESSED AND CAN MOVE ONTO ANALYSIS CODE. Added comments for where I want to split the code. Added section for appending index values to see if the target is missed on the initial reach. Doing this will be good for analysis later. In Segmentation_header,, added TODOs and functions that need to be tested." />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>96</line>
+          <option name="timeStamp" value="20" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>59</line>
+          <option name="timeStamp" value="39" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

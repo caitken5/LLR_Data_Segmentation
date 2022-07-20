@@ -34,22 +34,24 @@ def find_first_min(t, f, t_targets, peaks):
     # achieved in highly filtered force.
     first_min = []
     my_min = (np.asarray(signal.argrelmin(f)).flatten()).reshape((-1, 1))
-    min_time = t[my_min]
     # Based on Algorithm 1, find the first instance of min_ind that is greater than each subsequent t_target.
     for i in t_targets:
-        j2 = [j for j in min_time if j > i]
-        if len(j2) == 0:
-            j2 = i
-        j3 = [j for j in peaks if j > i]
+        j2 = [j for j in my_min if j > i]
+        j3 = [j for j in peaks if j > i]  # What if j3 is equal to 0?
+        if len(j2) == 0:  # Deal with case where no more minimums occur.
+            j2 = i[0]
+        else:
+            j2 = j2[0][0]
+        if len(j3) == 0:  # Deal with case where no more maximums occur.
+            j3 = t.shape[0] - 1  # This value should be chosen such that only the really prominent peaks are used.
+        else:
+            j3 = j3[0]
         if j2 > j3:
-            j2 = i  # If the minimum value occurs after a clear peak in movement, let the first value of the new task
+            j2 = i[0]  # If the minimum value occurs after a clear peak in movement, let the first value of the new task
             # start time be the original start task time.
-            # TODO: See if this if statement works as desired.
-            # TODO: Might also just exclude the data where this occurs.
-        first_min.append(np.round(j2[0][0], 2))
+        first_min.append(np.round(j2, 2))
         # NOTE: THERE WILL BE AN ERROR BETWEEN j2 = i and j2 = a value in min_time.
-        # TODO: Ensure first_min provides the correct time and is not off by 0.01.
-    return first_min, my_min, min_time
+    return first_min, my_min
 
 
 def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, d, peaks, first_min, save_name, save_folder):
@@ -58,17 +60,21 @@ def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, d, peak
     # Plot what this looks like.
     fig, ax = plt.subplots()
     fig.set_size_inches(25, 8)
+    ax.axvline(t_targets[0], color='k', label="Start of Task")
     [ax.axvline(_t_targets, color='k') for _t_targets in t_targets]
     # ax.plot(t, f, 'g-', label="Force Magnitude, no filter")
     ax.plot(t, d/10, 'm-', label="Distance from Target [cm]")
     ax.plot(t, f, 'b-', label="Force Magnitude, 3 Hz filter")
+    ax.axvline(first_min[0], color='g', label="First Minimum in Force Application After New Target")
     [ax.axvline(_my_min, color='g') for _my_min in first_min]
+    ax.axvline(peaks[0], color='r', label='Peak in Applied Force - Ballistic Movement')
     [ax.axvline(_my_peaks, color='r') for _my_peaks in peaks]
     plt.legend()
     plt.title('Force Applied During Entire Task Set for ' + save_name + '\n Start of Task (black) and Lowest Force Applied (green)')
     # TODO: Add scale for second y-axis in cm.
     plt.xlabel('Time [s]')
     plt.ylabel('Force [N]')
+    # plt.show()  # TODO: REMOVE THIS WHEN DONE TESTING CALCULATION OF LOCATION OF NEW REACH.
     plt.savefig(save_folder)
     fig.clf()
     plt.close()
@@ -102,17 +108,37 @@ def find_min_and_max_peak(data, minima_prominence, maxima_prominence):
 # TODO: Test find_end_of_initial_reach.
 def find_end_of_initial_reach(data):
     # First identify the displacement column of the data.
+    t = data[:, data_header.index('Time')]
     d = data[:, data_header.index('Dist_From_Target')]
-    min_prominence = 5  # Likely in mm.
-    max_prominence = 5
+    min_prominence = (10, None)  # Likely in mm.
+    max_prominence = (None, 25)
     new_reach_index = []
     # Then pass this data to the find_min_peak function. Hopefully some smoothing is not needed.
     minima, maxima = find_min_and_max_peak(d, min_prominence, max_prominence)
+    # Extract the indices separately for each minima and maxima, as well as the prominence value. Then, idnetify the time at which each occurs.
+    minima_indices = minima[0]
+    maxima_indices = maxima[0]
     # For every minima in the data that occurs, then select the first maxima that occurs after that minima value.
-    for i in minima:
-        j2 = [j for j in maxima if j > i]
-        if j2.shape[0] > 0:
+    for i in minima_indices:
+        j2 = [j for j in maxima_indices if j > i]
+        if len(j2) > 0:
             # Then another return to the target will have occurred, and the reach can be considered to have occurred.
-            new_reach_index.append(j2[0][0])
+            new_reach_index.append(j2[0])
+
     return new_reach_index, minima, maxima
 # Note that it is possible for new_reach_index to be empty.
+
+
+def save_npz(my_array, my_list, save_folder, file_name):
+    # Save the array with the list of indices to make packing and unpacking the array into a ragged array fairly simple.
+    # convert the generated list to a numpy array.
+    ending = '.npz'
+    my_list = np.asarray(my_list)
+    my_array = np.asarray(my_array, dtype=object)
+    # check if the file is control or patient.
+    # Add the data as a worksheet to the workbook.
+    file_name_list = file_name.split('_')
+    # Remove the .npy ending from file_name.
+    new_file_name = '_'.join(file_name_list[:6])
+    save_name = save_folder + '/' + new_file_name + '_' + ending
+    np.savez(save_name, target_data=my_array, unpacking_indices=my_list)
