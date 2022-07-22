@@ -3,7 +3,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import gc
 
 data_header = ['Time', 'Des_X_Pos', 'Des_Y_Pos', 'X_Pos', 'Y_Pos', 'OptoForce_X', 'OptoForce_Y', 'OptoForce_Z',
@@ -32,10 +32,13 @@ def butterworth_filter(data, freq):
 def find_first_min(t, f, t_targets, peaks):
     # Using the location of the first time stamp of each target, and the force, calculate the first minimum force
     # achieved in highly filtered force.
+    # TODO: Account for segments where the initial applied force before a peak is too high, and then look for the
+    #  next minimum.
     first_min = []
     my_min = (np.asarray(signal.argrelmin(f)).flatten()).reshape((-1, 1))
     # Based on Algorithm 1, find the first instance of min_ind that is greater than each subsequent t_target.
     for i in t_targets:
+        # Calculate the top of the force range in this target segment.
         j2 = [j for j in my_min if j > i]
         j3 = [j for j in peaks if j > i]  # What if j3 is equal to 0?
         if len(j2) == 0:  # Deal with case where no more minimums occur.
@@ -54,34 +57,33 @@ def find_first_min(t, f, t_targets, peaks):
     return first_min, my_min
 
 
-def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, d, peaks, first_min, save_name, save_folder):
+def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, v, d, firstmin_pts, fpeaks_pts, fmins_pts, save_stuff):
     # This function plots the recorded force for an entire task vs time, as well as straight lines for the both the
     # first time stamp of each target, and the time stamp of each line.
     # Plot what this looks like.
     fig, ax = plt.subplots()
     fig.set_size_inches(25, 8)
+    ax2 = ax.twinx()
     ax.axvline(t_targets[0], color='k', label="Start of Task")
     [ax.axvline(_t_targets, color='k') for _t_targets in t_targets]
-    # ax.plot(t, f, 'g-', label="Force Magnitude, no filter")
-    ax.plot(t, d/10, 'm-', label="Distance from Target [cm]")
-    ax.plot(t, f, 'b-', label="Force Magnitude, 3 Hz filter")
-    ax.axvline(first_min[0], color='g', label="First Minimum in Force Application After New Target")
-    [ax.axvline(_my_min, color='g') for _my_min in first_min]
-    ax.axvline(peaks[0], color='r', label='Peak in Applied Force - Ballistic Movement')
-    [ax.axvline(_my_peaks, color='r') for _my_peaks in peaks]
+    ax.plot(t, d/10, 'm-', label="Distance from Target [cm] (left y-axis)")
+    ax.plot(t, f, 'b-', label="Force Magnitude, 3 Hz filter (left y-axis)")
+    ax2.plot(t, v, 'g-', label='Velocity (right y-axis)')
+    ax.plot(firstmin_pts[0], firstmin_pts[1], 'c.', label="First Minimum in Force Application After New Target")
+    ax.plot(fpeaks_pts[0], fpeaks_pts[1], 'r+', label="Peak in Applied Force - Ballistic Movement")
+    ax.plot(fmins_pts[0], fmins_pts[1], 'c|', label="End of Ballistic Movement")
     plt.legend()
-    plt.title('Force Applied During Entire Task Set for ' + save_name + '\n Start of Task (black) and Lowest Force Applied (green)')
-    # TODO: Add scale for second y-axis in cm.
+    plt.title('Force Applied During Entire Task Set for ' + save_stuff[0])
     plt.xlabel('Time [s]')
     plt.ylabel('Force [N]')
-    # plt.show()  # TODO: REMOVE THIS WHEN DONE TESTING CALCULATION OF LOCATION OF NEW REACH.
-    plt.savefig(save_folder)
-    fig.clf()
+    ax2.set_ylabel('Velocity [mm/s]')
+    plt.show()  # TODO: REMOVE THIS WHEN DONE TESTING CALCULATION OF LOCATION OF NEW REACH.
+    plt.savefig(save_stuff[1])
+    # fig.clf()
     plt.close()
-    gc.collect()
+    # gc.collect()
 
 
-# TODO: Test split_by_indices.
 def split_by_indices(data, indices):
     # Split the arrays according to the indices that correspond to when a new target is being responded to.
     start = 0
@@ -95,17 +97,27 @@ def split_by_indices(data, indices):
     return ragged_list
 
 
-# TODO: Test find_min_and_max_peak.
 def find_min_and_max_peak(data, minima_prominence, maxima_prominence):
     # Find the minimum values and peaks in selected data.
     # To find the minimum values using find_peaks function, first multiply series by -1.
     neg_data = data*(-1)
     minima = signal.find_peaks(neg_data, prominence=minima_prominence)
     maxima = signal.find_peaks(data, prominence=maxima_prominence)
+    # Conclusion: using find_peaks with prominence in order to identify minima and maxima in the signal is too unreliable.
     return minima, maxima
 
 
-# TODO: Test find_end_of_initial_reach.
+def retrieve_maximum_value_per_target(data, start, end):
+    # Retrieve the maximum value from the single dimension array between the given indices.
+    seg_length = end-start
+    first_seg = int(np.round(seg_length*0.7, 0))
+    new_segment = data[start:(start + first_seg + 1)]
+    my_max = np.max(new_segment)
+    index = np.nonzero(new_segment == my_max)
+    index = start + index[0][0]
+    return my_max, index
+
+
 def find_end_of_initial_reach(data):
     # First identify the displacement column of the data.
     t = data[:, data_header.index('Time')]
@@ -142,3 +154,29 @@ def save_npz(my_array, my_list, save_folder, file_name):
     new_file_name = '_'.join(file_name_list[:6])
     save_name = save_folder + '/' + new_file_name + '_' + ending
     np.savez(save_name, target_data=my_array, unpacking_indices=my_list)
+
+
+def find_end_of_initial_reach(data, start, my_max, max_index, my_end, percent):
+    # Already have the location of the desired peak value. Get the peak_index relative to the segment start and end.
+    segment = data[start:my_end+1]
+    max_index = max_index - start
+    # Calculate the minimum value of force applied during the segment.
+    my_min = np.min(segment)
+    # Calculate the range of the force applied in the segment.
+    my_range = my_max - my_min
+    # Get the force value that represents the chosen percentage band from the lowest applied force.
+    min_limit = my_min + my_range * percent
+    # Get the data between the index of the segment where the selected peak force occurs and the end of the segment.
+    neg_segment = segment[max_index:]*-1
+    # Retrieve the index of the minimum values after the peak occurrence.
+    mins_index = signal.find_peaks(neg_segment)[0]
+    mins_index += max_index
+    new_min = segment[-1]
+    new_min_index = my_end
+    for i in mins_index:
+        temp = segment[i]
+        if temp < min_limit:
+            new_min = temp
+            new_min_index = start + i
+            break
+    return new_min, new_min_index

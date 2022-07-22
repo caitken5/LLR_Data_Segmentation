@@ -34,10 +34,10 @@ plot_lowest_force_lines = True
 separate_movement_phases = False
 if __name__ == '__main__':
     # Loop through numpy files that have been cleaned.
-    for file in os.listdir(test_folder):
+    for file in os.listdir(source_folder):
         if file.endswith('.npy'):
             # Load the data.
-            source_file = test_folder + '/' + file
+            source_file = source_folder + '/' + file
             print(file)
             data = np.load(source_file)
             # Identify locations of change between target locations by using To_From_Home column. Add 1 to get correct
@@ -53,23 +53,48 @@ if __name__ == '__main__':
             freq1 = 3
             f1 = h.butterworth_filter(f, freq1)
             # find first location of minimum force applied after the start of each task.
-            # TODO: Observe how find_peaks function that implements peak prominence is able to identify the peaks in
-            #  the signal.
-            peaks, properties = signal.find_peaks(f, prominence=2)
+            peaks, properties = signal.find_peaks(f, prominence=2.5)
             peaks_time = t[peaks]
-            first_min, my_min = h.find_first_min(t, f1, target_row, peaks)
-            first_min_time = t[first_min]
+            firstmin_index, firstmin_all = h.find_first_min(t, f1, target_row, peaks)
+            firstmin = f1[firstmin_index]
+            firstmin_time = t[firstmin_index]
+            # Use first_min array to segment data and identify the maximum force in that segment.
+            fpeaks = []
+            fpeaks_index = []
+            fmins = []
+            fmins_index = []
+            for i in range(len(firstmin_index)):
+                start = firstmin_index[i]
+                if i == len(firstmin_index) - 1:
+                    my_end = f1.shape[0]-1
+                else:
+                    my_end = firstmin_index[i+1]
+                f_max, f_index = h.retrieve_maximum_value_per_target(f1, start, my_end)
+                fpeaks.append(f_max)
+                fpeaks_index.append(f_index)
+                # While I'm here, identify the next minimum value in the force after the peak of the initial movement
+                # has been reached.
+                f_min, f_min_index = h.find_end_of_initial_reach(f1, start, f_max, f_index, my_end, 0.5)
+                fmins.append(f_min)
+                fmins_index.append(f_min_index)
+            fpeaks_time = t[fpeaks_index]
+            fmins_time = t[fmins_index]
+            # Reorganize the data into paired sets to pass to the function for easier plotting of points and readability.
+            firstmin_pts = np.vstack((firstmin_time, firstmin))
+            fpeaks_pts = np.vstack((fpeaks_time, fpeaks))
+            fmins_pts = np.vstack((fmins_time, fmins))
             save_name = file[:-12] + '_force_lowest_min_after_task_start'
             save_folder = graph_folder + '/' + save_name
+            save_stuff = (save_name, save_folder)
             if plot_lowest_force_lines:
-                h.plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f1, d, peaks_time, first_min_time, save_name,
-                                                                      save_folder)
+                h.plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f1, v, d, firstmin_pts, fpeaks_pts,
+                                                                      fmins_pts, save_stuff)
             # Split_by_indices for standard function saving.
             split_by_target = h.split_by_indices(data, np.squeeze(target_row))
             h.save_npz(split_by_target, target_row, npz_t_folder, file)
             # Split_by_indices for new start of force exertion.
-            split_by_force = h.split_by_indices(data, first_min)
-            h.save_npz(split_by_force, first_min, npz_f_folder, file)
+            split_by_force = h.split_by_indices(data, firstmin_index)
+            h.save_npz(split_by_force, firstmin_index, npz_f_folder, file)
             if separate_movement_phases:
                 # Identify if a new reach occurs.
                 new_reach_index, d_minima, d_maxima = h.find_end_of_initial_reach(data)
@@ -83,7 +108,7 @@ if __name__ == '__main__':
                 # Then it will probably be a matter of identifying a zero crossing? We'll see how easy it is...
                 [ax.axvline(_t_targets, color='k') for _t_targets in t_targets]
                 ax.plot(t, d, 'm-', label="Distance from Target [cm]")
-                [ax.axvline(_my_min, color='g') for _my_min in first_min_time]
+                [ax.axvline(_my_min, color='g') for _my_min in firstmin_time]
                 ax.plot(t_minima, d[d_minima[0]], 'x', label="Minima in distance from target")
                 ax.plot(t_maxima, d[d_maxima[0]], 'x', label="Maxima in distance from target")
                 ax.plot(t, f1*5, label='Applied Force')
@@ -97,7 +122,7 @@ if __name__ == '__main__':
                 if len(new_reach_index) > 0:
                     # Combine the first_min index with this and re-sort.
                     multi_split_index = []  # Identify if I can rewrite this as a list literal, and how.
-                    multi_split_index.append(first_min)
+                    multi_split_index.append(firstmin_index)
                     multi_split_index.append(new_reach_index)
                     multi_split_index.sort()  # TODO: Confirm that this sorts from least to most.
 
