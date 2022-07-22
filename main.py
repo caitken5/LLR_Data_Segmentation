@@ -52,10 +52,12 @@ if __name__ == '__main__':
             # Apply filters to force and velocity data, but force is probably more likely to represent intention than velocity.
             freq1 = 3
             f1 = h.butterworth_filter(f, freq1)
+            v1 = h.butterworth_filter(v, freq1)
             # find first location of minimum force applied after the start of each task.
             peaks, properties = signal.find_peaks(f, prominence=2.5)
             peaks_time = t[peaks]
-            firstmin_index, firstmin_all = h.find_first_min(t, f1, target_row, peaks)
+            my_percent = 0.5  # Note that this is the same minimum that I select later on.
+            firstmin_index, firstmin_all = h.find_first_min(t, f1, target_row, my_percent)
             firstmin = f1[firstmin_index]
             firstmin_time = t[firstmin_index]
             # Use first_min array to segment data and identify the maximum force in that segment.
@@ -87,7 +89,7 @@ if __name__ == '__main__':
             save_folder = graph_folder + '/' + save_name
             save_stuff = (save_name, save_folder)
             if plot_lowest_force_lines:
-                h.plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f1, v, d, firstmin_pts, fpeaks_pts,
+                h.plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f1, v1, d, firstmin_pts, fpeaks_pts,
                                                                       fmins_pts, save_stuff)
             # Split_by_indices for standard function saving.
             split_by_target = h.split_by_indices(data, np.squeeze(target_row))

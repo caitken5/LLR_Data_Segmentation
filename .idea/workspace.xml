@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="Added new separation for file folders when I separate data using the old method and the start of the force method. &#10;Added some plotting code to analyze how well the data has been separated. &#10;Added code that needs to be tested for separating out the initial movement phase from the corrective movement phase.&#10;In find_first_min, corrected and added some details for identifying when and where to separate the data.&#10;In plots, added better label naming for variables plotted.&#10;Added save_npz code.">
+    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Segmentation_header.py" beforeDir="false" afterPath="$PROJECT_DIR$/Segmentation_header.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -96,7 +96,14 @@
       <option name="project" value="LOCAL" />
       <updated>1658329285778</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Designed code for identification of peaks in each segment of reaching a target. Concatenated some of the data for easier data management. Added TODO to Segmentation_header.py, but saving this copy now so I have a working version even if the analysis portion isn't &quot;perfect&quot;. Changed the way the graphs plot so they are easier to view. Added second axis to printed graphs. Added working code that identifies the end of an initial reach.">
+      <created>1658507594311</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1658507594311</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -116,7 +123,8 @@
     <MESSAGE value="Added plotting into function in Segmentation_header. Plotted all the graphs. Fixed an error where code wouldn't work if not the lowest dip in signal would occur at the very end of the task. Added code to look for prominent peaks so that if the lowest peak value occurs before the lowest point, we start the force profile from the point where the task number changes. This still needs error checking, but this is the idea." />
     <MESSAGE value="A lot of code here has been written in this section, but has not been tested. NEXT STEP IS TO TEST AND VERIFY ALL THE SECTIONS OF THE CODE. THEN SEPARATION OF THE TASKS WILL HAVE BEEN ADDRESSED AND CAN MOVE ONTO ANALYSIS CODE. Added comments for where I want to split the code. Added section for appending index values to see if the target is missed on the initial reach. Doing this will be good for analysis later. In Segmentation_header,, added TODOs and functions that need to be tested." />
     <MESSAGE value="Added new separation for file folders when I separate data using the old method and the start of the force method. &#10;Added some plotting code to analyze how well the data has been separated. &#10;Added code that needs to be tested for separating out the initial movement phase from the corrective movement phase.&#10;In find_first_min, corrected and added some details for identifying when and where to separate the data.&#10;In plots, added better label naming for variables plotted.&#10;Added save_npz code." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added new separation for file folders when I separate data using the old method and the start of the force method. &#10;Added some plotting code to analyze how well the data has been separated. &#10;Added code that needs to be tested for separating out the initial movement phase from the corrective movement phase.&#10;In find_first_min, corrected and added some details for identifying when and where to separate the data.&#10;In plots, added better label naming for variables plotted.&#10;Added save_npz code." />
+    <MESSAGE value="Designed code for identification of peaks in each segment of reaching a target. Concatenated some of the data for easier data management. Added TODO to Segmentation_header.py, but saving this copy now so I have a working version even if the analysis portion isn't &quot;perfect&quot;. Changed the way the graphs plot so they are easier to view. Added second axis to printed graphs. Added working code that identifies the end of an initial reach." />
+    <option name="LAST_COMMIT_MESSAGE" value="Designed code for identification of peaks in each segment of reaching a target. Concatenated some of the data for easier data management. Added TODO to Segmentation_header.py, but saving this copy now so I have a working version even if the analysis portion isn't &quot;perfect&quot;. Changed the way the graphs plot so they are easier to view. Added second axis to printed graphs. Added working code that identifies the end of an initial reach." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

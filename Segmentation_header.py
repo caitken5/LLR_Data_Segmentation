@@ -3,7 +3,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import gc
 
 data_header = ['Time', 'Des_X_Pos', 'Des_Y_Pos', 'X_Pos', 'Y_Pos', 'OptoForce_X', 'OptoForce_Y', 'OptoForce_Z',
@@ -29,29 +29,35 @@ def butterworth_filter(data, freq):
     return filtered_data
 
 
-def find_first_min(t, f, t_targets, peaks):
+def find_first_min(t, f, t_targets, my_percent):
     # Using the location of the first time stamp of each target, and the force, calculate the first minimum force
     # achieved in highly filtered force.
-    # TODO: Account for segments where the initial applied force before a peak is too high, and then look for the
-    #  next minimum.
     first_min = []
-    my_min = (np.asarray(signal.argrelmin(f)).flatten()).reshape((-1, 1))
+    my_min_series = (np.asarray(signal.argrelmin(f)).flatten()).reshape((-1, 1))
+    my_min_series = np.squeeze(my_min_series)
     # Based on Algorithm 1, find the first instance of min_ind that is greater than each subsequent t_target.
-    for i in t_targets:
+    for k, i in enumerate(t_targets):
         # Calculate the top of the force range in this target segment.
-        j2 = [j for j in my_min if j > i]
-        j3 = [j for j in peaks if j > i]  # What if j3 is equal to 0?
+        my_start = i[0]
+        if k == t_targets.shape[0]-1:
+            my_end = t.shape[0]-1
+        else:
+            my_end = t_targets[k+1]
+            my_end = my_end[0]
+        segment = f[my_start:my_end + 1]
+        my_max = np.max(segment)
+        my_min = np.min(segment)
+        my_rng = my_max-my_min
+        my_thresh = my_max-my_rng*my_percent
+        # Retrieve the set of calculated minimum values and peaks that occur after i.
+        j2 = [j for j in my_min_series if j > my_start if j < my_end]
+        # Only keep j2 and j3 values that are less than my_end, as done above in list comprehension.
+        # Then, only keep index values for j2 where the value is less than the selected threshold.
+        j2 = [j for j in j2 if f[j] < my_thresh]
         if len(j2) == 0:  # Deal with case where no more minimums occur.
-            j2 = i[0]
+            j2 = my_start
         else:
-            j2 = j2[0][0]
-        if len(j3) == 0:  # Deal with case where no more maximums occur.
-            j3 = t.shape[0] - 1  # This value should be chosen such that only the really prominent peaks are used.
-        else:
-            j3 = j3[0]
-        if j2 > j3:
-            j2 = i[0]  # If the minimum value occurs after a clear peak in movement, let the first value of the new task
-            # start time be the original start task time.
+            j2 = j2[0]
         first_min.append(np.round(j2, 2))
         # NOTE: THERE WILL BE AN ERROR BETWEEN j2 = i and j2 = a value in min_time.
     return first_min, my_min
@@ -61,6 +67,7 @@ def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, v, d, f
     # This function plots the recorded force for an entire task vs time, as well as straight lines for the both the
     # first time stamp of each target, and the time stamp of each line.
     # Plot what this looks like.
+    ms = 10
     fig, ax = plt.subplots()
     fig.set_size_inches(25, 8)
     ax2 = ax.twinx()
@@ -68,20 +75,23 @@ def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, v, d, f
     [ax.axvline(_t_targets, color='k') for _t_targets in t_targets]
     ax.plot(t, d/10, 'm-', label="Distance from Target [cm] (left y-axis)")
     ax.plot(t, f, 'b-', label="Force Magnitude, 3 Hz filter (left y-axis)")
-    ax2.plot(t, v, 'g-', label='Velocity (right y-axis)')
-    ax.plot(firstmin_pts[0], firstmin_pts[1], 'c.', label="First Minimum in Force Application After New Target")
-    ax.plot(fpeaks_pts[0], fpeaks_pts[1], 'r+', label="Peak in Applied Force - Ballistic Movement")
-    ax.plot(fmins_pts[0], fmins_pts[1], 'c|', label="End of Ballistic Movement")
-    plt.legend()
-    plt.title('Force Applied During Entire Task Set for ' + save_stuff[0])
-    plt.xlabel('Time [s]')
-    plt.ylabel('Force [N]')
+    ax2.plot(t, v, 'g-', label='Velocity, 3 Hz filter (right y-axis)')
+    ax.plot(firstmin_pts[0], firstmin_pts[1], 'c.', label="First Minimum in Force Application After New Target",
+            markersize=ms)
+    ax.plot(fpeaks_pts[0], fpeaks_pts[1], 'r+', label="Peak in Applied Force - Ballistic Movement", markersize=ms)
+    ax.plot(fmins_pts[0], fmins_pts[1], 'c|', label="End of Ballistic Movement", markersize=ms)
+    lines, labels = ax.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax2.legend(lines+lines2, labels+labels2)
+    ax.grid()
+    ax.set_title('Force Applied During Entire Task Set for ' + save_stuff[0])
+    ax.set_xlabel('Time [s]')
+    ax.set_ylabel('Force [N]')
     ax2.set_ylabel('Velocity [mm/s]')
-    plt.show()  # TODO: REMOVE THIS WHEN DONE TESTING CALCULATION OF LOCATION OF NEW REACH.
-    plt.savefig(save_stuff[1])
-    # fig.clf()
+    fig.savefig(save_stuff[1])
+    fig.clf()
     plt.close()
-    # gc.collect()
+    gc.collect()
 
 
 def split_by_indices(data, indices):
@@ -118,7 +128,7 @@ def retrieve_maximum_value_per_target(data, start, end):
     return my_max, index
 
 
-def find_end_of_initial_reach(data):
+def find_end_of_initial_reach_old(data):
     # First identify the displacement column of the data.
     t = data[:, data_header.index('Time')]
     d = data[:, data_header.index('Dist_From_Target')]
