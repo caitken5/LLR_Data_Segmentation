@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="">
+    <list default="true" id="7587952f-c8de-4a45-b00e-b739131310a3" name="Changes" comment="Added filtering to velocity. Rewrote code for find-first-min that does not require peaks to identify them.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Segmentation_header.py" beforeDir="false" afterPath="$PROJECT_DIR$/Segmentation_header.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -23,6 +23,14 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="ProjectId" id="2Bax2ntdhFKrIyLBmbb7QvaaQcl" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -103,7 +111,14 @@
       <option name="project" value="LOCAL" />
       <updated>1658507594311</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Added filtering to velocity. Rewrote code for find-first-min that does not require peaks to identify them.">
+      <created>1658525948065</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1658525948065</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -124,10 +139,18 @@
     <MESSAGE value="A lot of code here has been written in this section, but has not been tested. NEXT STEP IS TO TEST AND VERIFY ALL THE SECTIONS OF THE CODE. THEN SEPARATION OF THE TASKS WILL HAVE BEEN ADDRESSED AND CAN MOVE ONTO ANALYSIS CODE. Added comments for where I want to split the code. Added section for appending index values to see if the target is missed on the initial reach. Doing this will be good for analysis later. In Segmentation_header,, added TODOs and functions that need to be tested." />
     <MESSAGE value="Added new separation for file folders when I separate data using the old method and the start of the force method. &#10;Added some plotting code to analyze how well the data has been separated. &#10;Added code that needs to be tested for separating out the initial movement phase from the corrective movement phase.&#10;In find_first_min, corrected and added some details for identifying when and where to separate the data.&#10;In plots, added better label naming for variables plotted.&#10;Added save_npz code." />
     <MESSAGE value="Designed code for identification of peaks in each segment of reaching a target. Concatenated some of the data for easier data management. Added TODO to Segmentation_header.py, but saving this copy now so I have a working version even if the analysis portion isn't &quot;perfect&quot;. Changed the way the graphs plot so they are easier to view. Added second axis to printed graphs. Added working code that identifies the end of an initial reach." />
-    <option name="LAST_COMMIT_MESSAGE" value="Designed code for identification of peaks in each segment of reaching a target. Concatenated some of the data for easier data management. Added TODO to Segmentation_header.py, but saving this copy now so I have a working version even if the analysis portion isn't &quot;perfect&quot;. Changed the way the graphs plot so they are easier to view. Added second axis to printed graphs. Added working code that identifies the end of an initial reach." />
+    <MESSAGE value="Added filtering to velocity. Rewrote code for find-first-min that does not require peaks to identify them." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added filtering to velocity. Rewrote code for find-first-min that does not require peaks to identify them." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>147</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">

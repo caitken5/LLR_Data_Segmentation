@@ -3,7 +3,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import gc
 
 data_header = ['Time', 'Des_X_Pos', 'Des_Y_Pos', 'X_Pos', 'Y_Pos', 'OptoForce_X', 'OptoForce_Y', 'OptoForce_Z',
@@ -63,6 +63,32 @@ def find_first_min(t, f, t_targets, my_percent):
     return first_min, my_min
 
 
+def find_first_min_2(segment, my_percent_low, my_start):
+    # Since this is per segment now, I can just take the segmented data, look for minimum values, identify when and
+    # where they happen in sequence and if they meet the magnitude requirements of qualifying as the first min.
+    # Return a single index value.
+    # Step 1: In the segment, identify the minimums and maximums.
+    my_min_series = (np.asarray(signal.argrelmin(segment)).flatten()).reshape((-1,))
+    if my_min_series.shape[0] > 1:  # Do not squeeze the dimensions if there is only a single (or no) returned value.
+        my_min_series = np.squeeze(my_min_series)  # my_min_series is the index of the location of minimums.
+    # Step 2: Calculate the minimum and maximum values in the series. Then calculated the range, and the threshold based
+    # on the provided threshold for which values will constitute a minimum.
+    my_max = np.max(segment)
+    my_min = np.min(segment)
+    my_rng = my_max - my_min
+    my_thr = my_min + (my_rng * my_percent_low)
+    # Since I've already separated out the segment of the data, no need to use list comprehension to extract out the
+    # mins from that segment only. But, use list comprehension to extract the minimums below my_thr.
+    valid_mins = [j for j in my_min_series if segment[j] < my_thr]
+    if len(valid_mins) == 0:
+        first_min = my_start
+    else:
+        first_min = my_start + valid_mins[0]
+    valid_mins += my_start  # For this and first_min, addressing the actual index relative to the entire signal,
+    my_min_series += my_start
+    return first_min, valid_mins, my_min_series
+
+
 def plot_force_and_start_of_task_and_lowest_force_lines(t, t_targets, f, v, d, firstmin_pts, fpeaks_pts, fmins_pts, save_stuff):
     # This function plots the recorded force for an entire task vs time, as well as straight lines for the both the
     # first time stamp of each target, and the time stamp of each line.
@@ -117,15 +143,22 @@ def find_min_and_max_peak(data, minima_prominence, maxima_prominence):
     return minima, maxima
 
 
-def retrieve_maximum_value_per_target(data, start, end):
-    # Retrieve the maximum value from the single dimension array between the given indices.
-    seg_length = end-start
-    first_seg = int(np.round(seg_length*0.7, 0))
-    new_segment = data[start:(start + first_seg + 1)]
-    my_max = np.max(new_segment)
-    index = np.nonzero(new_segment == my_max)
-    index = start + index[0][0]
-    return my_max, index
+def find_first_max(segment, my_percent_high, my_start, my_end):
+    # Extract all of the maximum values.
+    my_max_series = (np.asarray(signal.argrelmax(segment)).flatten()).reshape((-1,))
+    # Identify the threshold.
+    my_max = np.max(segment)
+    my_min = np.min(segment)
+    my_rng = my_max - my_min
+    my_thr = my_max - my_rng * my_percent_high
+    valid_maxs = [j for j in my_max_series if segment[j] > my_thr]
+    if len(valid_maxs) == 0:
+        first_max = my_end
+    else:
+        first_max = my_start + valid_maxs[0]
+    valid_maxs += my_start  # For this and first_min, addressing the actual index relative to the entire signal,
+    my_max_series += my_start
+    return first_max, valid_maxs, my_max_series
 
 
 def find_end_of_initial_reach_old(data):

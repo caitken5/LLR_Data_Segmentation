@@ -7,8 +7,6 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import signal
-
 
 import Segmentation_header as h
 
@@ -28,6 +26,8 @@ npz_f_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/LLR_DATA_PROCES
              "NPZ_FILES_BY_END_OF_FORCE_PROFILE"
 graph_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/LLR_DATA_PROCESSING_PIPELINE/4_LLR_DATA_SEGMENTATION/" \
              "GRAPHS_BY_END_OF_FORCE_PROFILE"
+demo_folder = "D:/PD_Participant_Data/LLR_DATA_ANALYSIS_CLEANED/LLR_DATA_PROCESSING_PIPELINE/4_LLR_DATA_SEGMENTATION/" \
+             "DEMO_GRAPHS"
 # The graph folder will be useful for plotting the newly segmented data, identifying where errors may be occurring,
 # and developing a plan of action for accounting for it.
 plot_lowest_force_lines = True
@@ -43,21 +43,115 @@ if __name__ == '__main__':
             # Identify locations of change between target locations by using To_From_Home column. Add 1 to get correct
             # index.
             target_row = h.get_first_target_row(data)
+            target_row = np.squeeze(target_row)
             # Get the time locations of the start of a new task.
             t_targets = data[target_row, h.data_header.index('Time')]
             t = data[:, h.data_header.index('Time')]
             v = data[:, h.data_header.index('Vxy_Mag')]
             d = data[:, h.data_header.index('Dist_From_Target')]
             f = data[:, h.data_header.index('Fxy_Mag')]
-            # Apply filters to force and velocity data, but force is probably more likely to represent intention than velocity.
+            # Apply filters to force and velocity data, but force is probably more likely to represent intention
+            # than velocity. In fact, the production of the force (as expected) proceeds the velocity measured by the
+            # device.
             freq1 = 3
             f1 = h.butterworth_filter(f, freq1)
             v1 = h.butterworth_filter(v, freq1)
-            # find first location of minimum force applied after the start of each task.
-            peaks, properties = signal.find_peaks(f, prominence=2.5)
-            peaks_time = t[peaks]
-            my_percent = 0.5  # Note that this is the same minimum that I select later on.
-            firstmin_index, firstmin_all = h.find_first_min(t, f1, target_row, my_percent)
+            my_percent_high = 0.5  # Note that this is the same minimum that I select later on.
+            my_percent_low = 0.3
+            # Use t_targets to segment the data.
+            sig = np.copy(f1)  # Use sig so that I can generalize this code later on with velocity if I need to.
+            # Create some lists to append calculated values to.
+            firstmin_indices = []
+            acceptmin_indices = np.asarray([])
+            allmin_indices = np.asarray([])
+            for i, my_start in enumerate(target_row):
+                # We start from the value of my_start, and retrieve the end target, which has value t_targets[i+1]
+                # Take care of the case where the last value is selected, so target_row[i+1] would return an error.
+                if i == target_row.shape[0] - 1:
+                    my_end = t.shape[0] - 1  # Here if we have reached the very last segment.
+                else:
+                    my_end = target_row[i+1]  # Use the indices rather than the numeric value in the recording time in
+                # for the segmentation algorithm.
+                segment = sig[my_start:my_end]
+                firstmin_index, acceptmin_index, allmin_index = h.find_first_min_2(segment, my_percent_low, my_start)
+                firstmin_indices.append(firstmin_index)
+                acceptmin_indices = np.hstack((acceptmin_indices, acceptmin_index))
+                allmin_indices = np.hstack((allmin_indices, allmin_index))
+
+            # Ensure both acceptmin_indices and allmin_indices are converted to int64 from float64.
+            acceptmin_indices = acceptmin_indices.astype(dtype=int)
+            allmin_indices = allmin_indices.astype(dtype=int)
+            firstmin_time = t[firstmin_indices]
+            firstmin_value = sig[firstmin_indices]
+            firstmin_pts = np.vstack((firstmin_time, firstmin_value))
+
+            acceptmin_time = t[acceptmin_indices]
+            acceptmin_value = sig[acceptmin_indices]
+            acceptmin_pts = np.vstack((acceptmin_time, acceptmin_value))
+
+            allmin_time = t[allmin_indices]
+            allmin_value = sig[allmin_indices]
+            allmin_pts = np.vstack((allmin_time, allmin_value))
+
+            # Now use a for loop to identify the maximums, and the end of reach values.
+            firstmax_indices = []
+            acceptmax_indices = np.asarray([])
+            allmax_indices = np.asarray([])
+            for i, my_start in enumerate(firstmin_indices):
+                # Use the new segments to identify the maximum values.
+                if i == len(firstmin_indices) - 1:
+                    my_end = t.shape[0] - 1  # Here if we have reached the very last segment.
+                else:
+                    my_end = firstmin_indices[i+1]
+                # Now separate out the segment between the firstmin_indices.
+                segment = sig[my_start:my_end]
+                firstmax_index, acceptmax_index, allmax_index = h.find_first_max(segment, my_percent_low, my_start, my_end)
+                firstmax_indices.append(firstmax_index)
+                acceptmax_indices = np.hstack((acceptmax_indices, acceptmax_index))
+                allmax_indices = np.hstack((allmax_indices, allmax_index))
+                # TODO: Identify all the minima in this set.
+                # TODO: Identify the end of the initial reach.
+                # TODO: Identify the acceptable minimum that occurs prior to the maximum value in the reach.
+
+            # Ensure both acceptmin_indices and allmin_indices are converted to int64 from float64.
+            acceptmax_indices = acceptmax_indices.astype(dtype=int)
+            allmax_indices = allmax_indices.astype(dtype=int)
+            firstmax_time = t[firstmax_indices]
+            firstmax_value = sig[firstmax_indices]
+            firstmax_pts = np.vstack((firstmax_time, firstmax_value))
+
+            acceptmax_time = t[acceptmax_indices]
+            acceptmax_value = sig[acceptmax_indices]
+            acceptmax_pts = np.vstack((acceptmax_time, acceptmax_value))
+
+            allmax_time = t[allmax_indices]
+            allmax_value = sig[allmax_indices]
+            allmax_pts = np.vstack((allmax_time, allmax_value))
+            # TODO: Test above code by making a graph. Then, add other parts.
+            ms = 10
+            fig, ax = plt.subplots()
+            fig.set_size_inches(25, 8)
+            ax.axvline(t_targets[0], color='k', label="Start of Task")
+            [ax.axvline(_t_targets, color='k') for _t_targets in t_targets]
+            ax.plot(t, sig, 'b-', label="Force Magnitude, 3 Hz filter")
+            # ax.plot(allmin_pts[0], allmin_pts[1], 'bo', label="All Minima")
+            # ax.plot(acceptmin_pts[0], acceptmin_pts[1], 'c.', label="All Minimum Values Below Threshold")
+            ax.plot(firstmin_pts[0], firstmin_pts[1], 'r+', label="First Minimum in Force Application After New Target",
+                    markersize=ms)
+            # ax.plot(allmax_pts[0], allmax_pts[1], 'bo', label="All Maxima")
+            ax.plot(acceptmax_pts[0], acceptmax_pts[1], 'c.', label="All Maximum Values Above Threshold")
+            ax.plot(firstmax_pts[0], firstmax_pts[1], 'r+', label="First Valid Maximum in Force Application After "
+                                                                  "New Force Segment", markersize=ms)
+            ax.grid()
+            ax.legend()
+            ax.set_title('Identifying Segments from Force Data | Identifying Maximum of Force Profile | ' + file)
+            ax.set_xlabel('Time [s]')
+            ax.set_ylabel('Force [N]')
+            plt.show()
+            plt.close(fig)
+
+            # TODO: When done testing graphs, put code for graphs into a function.
+            # IMPORTANT: Code now only works up to here. The rest will be dealt with/deleted soon.
             firstmin = f1[firstmin_index]
             firstmin_time = t[firstmin_index]
             # Use first_min array to segment data and identify the maximum force in that segment.
